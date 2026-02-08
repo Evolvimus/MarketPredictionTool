@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quantum Market Potential</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #000;
+            color: #fff;
+            font-family: 'Share Tech Mono', monospace;
+            display: flex;
+            height: 100vh;
+        }
+
+        /* Layout */
+        #neural-panel {
+            width: 40%;
+            height: 100%;
+            border-right: 1px solid #333;
+            position: relative;
+            background: radial-gradient(circle at center, #111 0%, #000 100%);
+        }
+
+        #quantum-panel {
+            width: 60%;
+            height: 100%;
+            position: relative;
+            background: #050505;
+        }
+
+        /* UI Overlays */
+        .overlay {
+            position: absolute;
+            pointer-events: none;
+            padding: 20px;
+            box-sizing: border-box;
+            width: 100%;
+        }
+
+        h2 {
+            margin: 0;
+            color: #00ffcc;
+            font-size: 18px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px rgba(0, 255, 204, 0.5);
+        }
+
+        .stat {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .stat span {
+            color: #fff;
+            font-weight: bold;
+        }
+
+        #controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            z-index: 10;
+        }
+
+        input {
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid #333;
+            color: #00ffcc;
+            padding: 10px;
+            font-family: inherit;
+            text-align: center;
+            font-size: 16px;
+        }
+
+        button {
+            background: #003333;
+            border: 1px solid #00ffcc;
+            color: #00ffcc;
+            padding: 10px 20px;
+            font-family: inherit;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            background: #00ffcc;
+            color: #000;
+            box-shadow: 0 0 20px #00ffcc;
+        }
+
+        /* Loading Overlay */
+        #loading {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            z-index: 1000;
+            display: none;
+        }
+
+        .loader {
+            border: 4px solid #111;
+            border-top: 4px solid #00ffcc;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Neural Network Panel -->
+    <div id="neural-panel">
+        <canvas id="neural-canvas"></canvas>
+        <div class="overlay">
+            <h2>Neural State</h2>
+            <div class="stat">Internal Nodes: <span>184 Active</span></div>
+            <div class="stat">Complexity: <span>High</span></div>
+        </div>
+    </div>
+
+    <!-- Quantum Surface Panel -->
+    <div id="quantum-panel">
+        <div class="overlay">
+            <h2>Market Potential Field</h2>
+            <div class="stat">Ticker: <span id="ticker-disp">--</span></div>
+            <div class="stat">Potential: <span id="trend-disp">--</span></div>
+            <div class="stat">Entropy: <span id="vol-disp">--</span></div>
+        </div>
+    </div>
+
+    <!-- Controls -->
+    <div id="controls">
+        <input type="text" id="ticker-input" value="BTC-USD">
+        <button onclick="runObservation()">OBSERVE STATE</button>
+    </div>
+
+    <!-- Loading -->
+    <div id="loading">
+        <div class="loader"></div>
+        <div style="margin-top: 20px; color: #00ffcc; letter-spacing: 2px;">COLLAPSING WAVEFUNCTION...</div>
+    </div>
+
+    <script>
+        // Wraps script in a try-catch for global error logging to UI
+        window.onerror = function (message, source, lineno, colno, error) {
+            const errDiv = document.createElement('div');
+            errDiv.style.position = 'fixed';
+            errDiv.style.top = '0';
+            errDiv.style.left = '0';
+            errDiv.style.width = '100%';
+            errDiv.style.background = 'red';
+            errDiv.style.color = 'white';
+            errDiv.style.zIndex = '9999';
+            errDiv.style.padding = '10px';
+            errDiv.innerText = "ERROR: " + message + " at line " + lineno;
+            document.body.appendChild(errDiv);
+        };
+
+        // --- VISUALIZATION STATE ---
+        let marketState = {
+            volatility: 0, trend: 0, momentum: 0, entropy: 0
+        };
+
+        // --- CHATBOT UI SETUP (Move to top to ensure it loads) ---
+        const style = document.createElement('style');
+        style.innerHTML = `
+            #chat-widget { position: absolute; bottom: 20px; right: 20px; width: 300px; background: rgba(0,0,0,0.9); border: 1px solid #333; border-radius: 8px; display: flex; flex-direction: column; box-shadow: 0 0 20px rgba(0,0,0,0.8); z-index: 100; max-height: 400px; }
+            #chat-header { background: #111; padding: 10px; color: #00ffcc; font-weight: bold; border-bottom: 1px solid #333; cursor: pointer;}
+            #chat-history { height: 200px; overflow-y: auto; padding: 10px; font-size: 12px; color: #ccc; }
+            .msg { margin-bottom: 8px; }
+            .msg.user { color: #fff; text-align: right; }
+            .msg.ai { color: #00ffcc; }
+            #chat-input-area { display: flex; border-top: 1px solid #333; }
+            #chat-input { flex-grow: 1; background: #000; border: none; color: #fff; padding: 10px; outline: none; }
+            #chat-send { background: #003333; border: none; color: #00ffcc; padding: 0 15px; cursor: pointer; }
+            #chat-send:hover { background: #004444; }
+        `;
+        document.head.appendChild(style);
+
+        const chatHTML = `
+            <div id="chat-header">Quantum Assistant</div>
+            <div id="chat-history"><div class="msg ai">I am the Quantum Assistant. Ask me about the field.</div></div>
+            <div id="chat-input-area"><input type="text" id="chat-input" placeholder="Ask..."><button id="chat-send">></button></div>
+        `;
+        const chatDiv = document.createElement('div');
+        chatDiv.id = 'chat-widget';
+        chatDiv.innerHTML = chatHTML;
+        document.body.appendChild(chatDiv);
+
+        const chatHistory = document.getElementById('chat-history');
+        const chatInput = document.getElementById('chat-input');
+        const chatSend = document.getElementById('chat-send');
+
+        async function sendChat() {
+            const txt = chatInput.value;
+            if (!txt) return;
+            addMsg(txt, 'user');
+            chatInput.value = '';
+            const loadingId = addMsg('Thinking...', 'ai');
+            try {
+                const currentTicker = document.getElementById('ticker-input').value;
+                const trendDisp = document.getElementById('trend-disp') ? document.getElementById('trend-disp').innerText : "Neutral";
+                const res = await fetch('/api/chat_quantum', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        question: txt,
+                        state: {
+                            ticker: currentTicker,
+                            momentum: marketState.momentum,
+                            trend: marketState.trend,
+                            volatility: marketState.volatility,
+                            regime: trendDisp
+                        }
+                    })
+                });
+                const data = await res.json();
+                const loadEl = document.getElementById(loadingId);
+                if (loadEl) loadEl.innerText = data.answer || "Error: No answer";
+            } catch (e) {
+                console.error(e);
+                const loadEl = document.getElementById(loadingId);
+                if (loadEl) loadEl.innerText = "Error: Connection failed.";
+            }
+        }
+        function addMsg(txt, type) {
+            const div = document.createElement('div');
+            div.className = 'msg ' + type;
+            div.innerText = txt;
+            div.id = 'msg-' + Date.now();
+            chatHistory.appendChild(div);
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+            return div.id;
+        }
+        chatSend.onclick = sendChat;
+        chatInput.onkeypress = (e) => { if (e.key === 'Enter') sendChat(); };
+
+
+        // --- PART 1: Neural Network Visualizer ---
+        // ... (Existing Neural Code) ...
+
+
+
+        // --- PART 1: Neural Network Visualizer (Left Panel) ---
+        const neuralCanvas = document.getElementById('neural-canvas');
+        const nc = neuralCanvas.getContext('2d');
+        let nodes = [];
+        let connections = [];
+
+        function resizeNeural() {
+            neuralCanvas.width = document.getElementById('neural-panel').clientWidth;
+            neuralCanvas.height = document.getElementById('neural-panel').clientHeight;
+        }
+        window.addEventListener('resize', resizeNeural);
+        resizeNeural();
+
+        // Initialize Nodes (Static Topology, Dynamic State)
+        for (let i = 0; i < 60; i++) {
+            nodes.push({
+                x: Math.random() * neuralCanvas.width,
+                y: Math.random() * neuralCanvas.height,
+                baseX: Math.random() * neuralCanvas.width,
+                baseY: Math.random() * neuralCanvas.height,
+                active: false
+            });
+        }
+        // Create Connections (Static Topology)
+        nodes.forEach((n, i) => {
+            // Connect to nearest 3 neighbors
+            const neighbors = nodes.map((n2, j) => {
+                const d = Math.hypot(n.x - n2.x, n.y - n2.y);
+                return { idx: j, dist: d };
+            }).sort((a, b) => a.dist - b.dist).slice(1, 4);
+
+            neighbors.forEach(nb => {
+                if (nb.idx > i) connections.push({ a: i, b: nb.idx, pulse: Math.random() }); // Unique edges
+            });
+        });
+
+        function drawNeural() {
+            // 1. Clear with Trail effect
+            nc.fillStyle = 'rgba(0,0,0,0.2)';
+            nc.fillRect(0, 0, neuralCanvas.width, neuralCanvas.height);
+
+            // 2. Update Dynamics based on Real Market State
+            const speed = 0.05 + (marketState.volatility * 0.2); // Volatility = Speed
+            const jitter = marketState.entropy * 2.0;            // Entropy = Shake
+
+            // Color based on Direction (Green=Bull, Red=Bear, Blue=Neutral)
+            let r, g, b;
+            if (marketState.momentum > 0.2) { r = 0; g = 255; b = 204; } // Green/Cyan
+            else if (marketState.momentum < -0.2) { r = 255; g = 50; b = 50; } // Red
+            else { r = 100; g = 100; b = 255; } // Blue
+
+            // Draw Connections
+            nc.lineWidth = 1;
+            connections.forEach(c => {
+                const na = nodes[c.a];
+                const nb = nodes[c.b];
+
+                // Jitter nodes based on Entropy
+                if (Math.random() < 0.1) {
+                    na.x = na.baseX + (Math.random() - 0.5) * jitter;
+                    na.y = na.baseY + (Math.random() - 0.5) * jitter;
+                }
+
+                // Draw line
+                nc.strokeStyle = `rgba(${r}, ${g}, ${b}, 0.2)`;
+                nc.beginPath();
+                nc.moveTo(na.x, na.y);
+                nc.lineTo(nb.x, nb.y);
+                nc.stroke();
+
+                // Pulse Animation (Speed driven by Volatility)
+                c.pulse += speed;
+                if (c.pulse > 1) c.pulse = 0;
+
+                const px = na.x + (nb.x - na.x) * c.pulse;
+                const py = na.y + (nb.y - na.y) * c.pulse;
+
+                // Pulse Particle
+                nc.beginPath();
+                nc.arc(px, py, 2 + (marketState.volatility * 2), 0, Math.PI * 2);
+                nc.fillStyle = `rgba(${r}, ${g}, ${b}, 1)`;
+                nc.fill();
+            });
+
+            requestAnimationFrame(drawNeural);
+        }
+        drawNeural();
+
+
+        // --- PART 2: Three.js Quantum Surface (Right Panel) ---
+        const qContainer = document.getElementById('quantum-panel');
+        const scene = new THREE.Scene();
+        // Darker fog for depth
+        scene.fog = new THREE.FogExp2(0x020202, 0.02);
+
+        const camera = new THREE.PerspectiveCamera(60, qContainer.clientWidth / qContainer.clientHeight, 0.1, 1000);
+        camera.position.set(0, 20, 30);
+        camera.lookAt(0, 0, 0);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(qContainer.clientWidth, qContainer.clientHeight);
+        qContainer.appendChild(renderer.domElement);
+
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.autoRotate = true;
+        controls.autoRotateSpeed = 0.5;
+
+        // Trail Mesh - Global Scope for visualizeData
+        let trailMesh;
+
+        // --- VISUAL UPGRADE: LOW POLY MATERIAL ---
+        // The Potential Surface
+        const planeGeo = new THREE.PlaneGeometry(40, 40, 40, 40); // Fewer segments = more visible polys
+
+        // Wireframe for structure + Flat Shading for "Solid" look
+        const planeMat = new THREE.MeshPhongMaterial({
+            color: 0x0055ff,
+            emissive: 0x001133,
+            side: THREE.DoubleSide,
+            flatShading: true,      // CRITICAL: Low Poly Look
+            shininess: 80,
+            wireframe: false,       // Solid surface
+            transparent: true,
+            opacity: 0.9
+        });
+
+        // Helper wireframe overlay
+        const wireMat = new THREE.MeshBasicMaterial({ color: 0x00ccff, wireframe: true, transparent: true, opacity: 0.2 });
+        const wireMesh = new THREE.Mesh(planeGeo, wireMat);
+        scene.add(wireMesh);
+
+        const plane = new THREE.Mesh(planeGeo, planeMat);
+        scene.add(plane);
+
+        // Current State Ball - Glowy
+        const ballGeo = new THREE.SphereGeometry(0.8, 32, 32);
+        const ballMat = new THREE.MeshStandardMaterial({
+            color: 0xffffff,
+            emissive: 0x00ffff,
+            emissiveIntensity: 2
+        });
+        const ball = new THREE.Mesh(ballGeo, ballMat);
+        scene.add(ball);
+
+        // Point Light attached to ball
+        const ballLight = new THREE.PointLight(0x00ffff, 2, 20);
+        ball.add(ballLight);
+
+        // Grid Floor
+        const gridHelper = new THREE.GridHelper(60, 60, 0x111111, 0x050505);
+        scene.add(gridHelper);
+
+        // Lighting Upgrade
+        const ambientLight = new THREE.AmbientLight(0x404040); // Soft white light
+        scene.add(ambientLight);
+
+        const spotLight = new THREE.SpotLight(0xffffff, 1);
+        spotLight.position.set(0, 50, 0);
+        spotLight.angle = Math.PI / 4;
+        spotLight.penumbra = 0.5;
+        scene.add(spotLight);
+
+        // Bottom light for glow
+        const hemiLight = new THREE.HemisphereLight(0x000000, 0x002244, 1);
+        scene.add(hemiLight);
+
+
+        // Parameters
+        let surfaceParams = {
+            tiltIso: 0,
+            wellDepth: 0,
+            volatility: 0,
+            time: 0
+        };
+
+        function updateSurface() {
+            const positions = plane.geometry.attributes.position;
+            // Animation time only moves connection ripples.
+            // Surface SHAPE is now STRICTLY defined by marketState.
+            surfaceParams.time += 0.01;
+
+            // Use real market values directly
+            const w1 = 0.8; // Direction Impact
+            const w2 = 0.8; // Regime Impact
+            const w3 = 1.0; // Volatility Impact
+
+            for (let i = 0; i < positions.count; i++) {
+                const x = positions.getX(i);
+                const y = positions.getY(i);
+
+                // Normalized coords [-1, 1]
+                const x_n = x / 20.0;
+                const y_n = y / 20.0;
+
+                // --- REAL PHYSICS MAPPING ---
+                // 1. Direction Potential (Momentum)
+                let z = -(marketState.momentum * x_n * 8.0);
+
+                // 2. Regime Potential (Trend)
+                const trendVal = (marketState.trend + 1) / 2;
+                const canyon = Math.pow(y_n, 2) * 15;
+                const bowl = (Math.pow(x_n, 2) + Math.pow(y_n, 2)) * 8;
+                z += (canyon * trendVal) + (bowl * (1 - trendVal));
+
+                // 3. Volatility (Uncertainty)
+                const noise = Math.sin(x_n * 8 + surfaceParams.time) * Math.cos(y_n * 8 + surfaceParams.time);
+                z += noise * marketState.volatility * 2.5;
+
+                // Clamp max height
+                if (z > 15) z = 15;
+
+                positions.setZ(i, z);
+            }
+            positions.needsUpdate = true;
+            // Also update wireframe geometry to match
+            const wirePositions = wireMesh.geometry.attributes.position;
+            for (let i = 0; i < positions.count; i++) {
+                wirePositions.setZ(i, positions.getZ(i) + 0.05); // slightly above
+            }
+            wirePositions.needsUpdate = true;
+
+            // Update Plane Normals for Flat Shading
+            plane.geometry.computeVertexNormals();
+
+
+            // Update Ball Position
+            ball.position.x = marketState.momentum * 15;
+            ball.position.z = 0;
+            ball.position.y = getSurfaceHeight(ball.position.x, 0) + 1.5; // Sit on top
+
+            // Ball Color
+            if (marketState.trend > 0.5) {
+                ball.material.emissive.setHex(0x00ff00);
+                ballLight.color.setHex(0x00ff00);
+            } else if (marketState.volatility > 0.7) {
+                ball.material.emissive.setHex(0xff0000);
+                ballLight.color.setHex(0xff0000);
+            } else {
+                ball.material.emissive.setHex(0x00ffff);
+                ballLight.color.setHex(0x00ffff);
+            }
+        } // End updateSurface
+
+        function getSurfaceHeight(x, y) {
+            const x_n = x / 20.0;
+            const y_n = y / 20.0;
+            let z = -(marketState.momentum * x_n * 8.0);
+            const trendVal = (marketState.trend + 1) / 2;
+            const canyon = Math.pow(y_n, 2) * 15;
+            const bowl = (Math.pow(x_n, 2) + Math.pow(y_n, 2)) * 8;
+            z += (canyon * trendVal) + (bowl * (1 - trendVal));
+            return z;
+        }
+
+        function animate3D() {
+            requestAnimationFrame(animate3D);
+            updateSurface();
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        animate3D();
+
+        // --- LOGIC ---
+
+        async function runObservation() {
+            const ticker = document.getElementById('ticker-input').value;
+            const loader = document.getElementById('loading');
+
+            if (loader) loader.style.display = 'flex';
+
+            try {
+                const res = await fetch('/api/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ticker: ticker, model: 'llama3' })
+                });
+                const data = await res.json();
+
+                if (data.error) throw new Error(data.error);
+
+                // Robust check for quantum state
+                if (!data.quantum_state) {
+                    data.quantum_state = { current: { x: 0, y: 0, z: 0 }, history: [] };
+                }
+                if (!data.quantum_state.history) data.quantum_state.history = [];
+
+                visualizeData(data);
+
+            } catch (e) {
+                console.error(e);
+                // alert("Analysis Failed: " + e.message); // Don't interrupt flow with alert
+            } finally {
+                if (loader) loader.style.display = 'none';
+            }
+        }
+
+        function visualizeData(data) {
+            document.getElementById('ticker-disp').innerText = data.ticker;
+
+            const q = data.quantum_state.current;
+            const regime = data.regime;
+
+            document.getElementById('trend-disp').innerText = regime.toUpperCase();
+            document.getElementById('vol-disp').innerText = (q.z * 100).toFixed(0) + "%";
+
+            // --- UPDATE STATE from REAL DATA ---
+            marketState.momentum = q.x;         // [-1, 1]
+            marketState.trend = q.y;            // [-1, 1]
+            marketState.volatility = q.z;       // [0, 1]
+
+            // Entropy Estimate (Vol + Indecision)
+            // High Vol + Low Trend = High Entropy
+            marketState.entropy = (q.z + (1 - Math.abs(q.y))) / 2;
+
+            // Trail Logic... (Keep existing)
+            const points = [];
+            data.quantum_state.history.forEach((h, i) => {
+                // Map history to a path
+                // X = Momentum
+                // Z = Time (History goes back in depth?)
+                // Y = Volatility?
+
+                // Trace back in Z
+                const zPos = (data.quantum_state.history.length - 1 - i) * 0.5;
+                points.push(new THREE.Vector3(h.x * 10, h.y * 5, -zPos)); // Just mapping raw vector to space
+            });
+
+            if (trailMesh) scene.remove(trailMesh);
+            const geo = new THREE.BufferGeometry().setFromPoints(points);
+            const mat = new THREE.LineBasicMaterial({ color: 0xffffff });
+            trailMesh = new THREE.Line(geo, mat);
+            scene.add(trailMesh);
+        }
+
+        // Resize handling
+        window.addEventListener('resize', () => {
+            resizeNeural();
+
+            camera.aspect = qContainer.clientWidth / qContainer.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(qContainer.clientWidth, qContainer.clientHeight);
+        });
+
+        // Auto-Run on Load
+        runObservation();
+
+    </script>
+</body>
+
+</html>

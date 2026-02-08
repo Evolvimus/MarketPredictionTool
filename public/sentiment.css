@@ -1,0 +1,232 @@
+/* ===== SENTIMENT COMPONENTS ===== */
+
+/* Sentiment Overview */
+.sentiment-overview {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+/* Sentiment Gauge */
+.sentiment-gauge {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.gauge-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.gauge-container {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.gauge-bar {
+    flex: 1;
+    height: 12px;
+    background: var(--bg-sidebar);
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid var(--border-glass);
+    position: relative;
+}
+
+.gauge-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #ef4444 0%, #94a3b8 50%, #10b981 100%);
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+}
+
+.gauge-score {
+    font-size: 1.5rem;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+    min-width: 70px;
+    text-align: right;
+}
+
+.gauge-score.bullish {
+    color: var(--success);
+}
+
+.gauge-score.bearish {
+    color: var(--danger);
+}
+
+.gauge-score.neutral {
+    color: var(--text-dim);
+}
+
+/* Sentiment Stats */
+.sentiment-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+}
+
+.stat-badge {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem;
+    background: var(--bg-glass);
+    border: 1px solid var(--border-glass);
+    border-radius: 12px;
+    transition: var(--transition-smooth);
+}
+
+.stat-badge:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.stat-badge i {
+    font-size: 1.5rem;
+}
+
+.stat-badge span {
+    font-size: 1.75rem;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.stat-badge small {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-dim);
+}
+
+.stat-badge.bullish {
+    border-left: 4px solid var(--success);
+}
+
+.stat-badge.bullish i,
+.stat-badge.bullish span {
+    color: var(--success);
+}
+
+.stat-badge.bearish {
+    border-left: 4px solid var(--danger);
+}
+
+.stat-badge.bearish i,
+.stat-badge.bearish span {
+    color: var(--danger);
+}
+
+.stat-badge.neutral {
+    border-left: 4px solid var(--text-dim);
+}
+
+.stat-badge.neutral i,
+.stat-badge.neutral span {
+    color: var(--text-dim);
+}
+
+/* Sentiment Context Box */
+.sentiment-context {
+    margin-top: 1rem;
+    padding: 1rem 1.25rem;
+    background: var(--bg-sidebar);
+    border-radius: 12px;
+    border-left: 4px solid var(--success);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    animation: slideIn 0.4s ease-out;
+}
+
+.sentiment-context.warning {
+    border-left-color: var(--warning);
+    background: var(--warning-bg);
+}
+
+.sentiment-context.danger {
+    border-left-color: var(--danger);
+    background: var(--danger-bg);
+}
+
+.context-icon {
+    font-size: 1.5rem;
+    color: var(--success);
+}
+
+.sentiment-context.warning .context-icon {
+    color: var(--warning);
+}
+
+.sentiment-context.danger .context-icon {
+    color: var(--danger);
+}
+
+.context-text {
+    flex: 1;
+}
+
+.context-title {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+}
+
+.context-subtitle {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* News Item Sentiment Badge */
+.news-sentiment-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 6px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.news-sentiment-badge.bullish {
+    background: var(--success-bg);
+    color: var(--success);
+}
+
+.news-sentiment-badge.bearish {
+    background: var(--danger-bg);
+    color: var(--danger);
+}
+
+.news-sentiment-badge.neutral {
+    background: var(--bg-glass);
+    color: var(--text-dim);
+}
+
+.news-sentiment-badge i {
+    font-size: 0.6rem;
+}
