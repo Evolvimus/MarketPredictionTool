@@ -35,7 +35,7 @@ int main() {
     try {
       auto body = json::parse(req.body);
       std::string ticker = body.value("ticker", "AAPL");
-      std::string model = body.value("model", "llama3");
+      std::string model = body.value("model", "deepseek-v3.1:671b-cloud");
 
       std::cout << "API Request: ticker=" << ticker << ", model=" << model
                 << std::endl;
@@ -390,7 +390,7 @@ int main() {
                  << "Explain the situation based on these physics metaphors. "
                     "Keep it short (max 3 sentences).";
 
-      OllamaClient ai("llama3");
+      OllamaClient ai("deepseek-v3.1:671b-cloud");
       std::string answer = ai.ask_question(sys_prompt.str(), question);
 
       json response = {{"answer", answer}};

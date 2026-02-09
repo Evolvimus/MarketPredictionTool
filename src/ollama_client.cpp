@@ -32,18 +32,80 @@ OllamaClient::get_market_analysis(const std::string &ticker,
     request_body["format"] = "json"; // Enforce JSON output for Meta-Analyst
 
     std::string prompt =
-        "You are the 'Meta-Analyst' in a 3-model trading system.\n"
-        "Your task: Evaluate the input from the Regime Classifier and "
-        "Directional Model.\n"
-        "CRITICAL RULES:\n"
-        "1. DO NOT invent trades. ONLY evaluate what is provided.\n"
-        "2. Check for High Timeframe (HTF) Alignment. Does the signal match "
-        "the HTF trend?\n"
-        "3. You can VETO a trade if you see contradictions or high "
-        "non-technical risk.\n"
-        "4. Identify contradictions (e.g., Bullish prediction but RSI is 85 "
-        "or HTF Trend is Bearish).\n\n"
-        "INPUT DATA (JSON):\n" +
+        "You are the 'Meta-Analyst' - an elite AI trading strategist with "
+        "advanced reasoning capabilities.\\n"
+        "You operate in a sophisticated 3-model trading system with access to "
+        "regime classification, directional predictions, and comprehensive "
+        "market data.\\n\\n"
+
+        "═══════════════════════════════════════════════════════════════\\n"
+        "CORE MISSION: Multi-Dimensional Market Analysis\\n"
+        "═══════════════════════════════════════════════════════════════\\n\\n"
+
+        "ANALYSIS FRAMEWORK (Execute in this order):\\n\\n"
+
+        "1. MARKET REGIME ASSESSMENT\\n"
+        "   - Analyze the current regime (trend_following, mean_reversion, "
+        "high_vol, low_vol)\\n"
+        "   - Evaluate regime stability and confidence level\\n"
+        "   - Identify potential regime transitions or mixed signals\\n"
+        "   - Consider historical regime persistence patterns\\n\\n"
+
+        "2. MULTI-TIMEFRAME CONFLUENCE ANALYSIS\\n"
+        "   - HTF (Higher Time Frame) vs LTF (Lower Time Frame) alignment\\n"
+        "   - Identify divergences between timeframes\\n"
+        "   - Assess the strength of trend alignment\\n"
+        "   - Evaluate momentum consistency across timeframes\\n\\n"
+
+        "3. TECHNICAL INDICATOR SYNTHESIS\\n"
+        "   - RSI: Momentum exhaustion vs continuation signals\\n"
+        "   - ADX: Trend strength and directional movement\\n"
+        "   - MACD: Momentum shifts and crossover significance\\n"
+        "   - Bollinger Bands: Volatility expansion/contraction\\n"
+        "   - Volume Profile: Institutional participation and conviction\\n"
+        "   - VWAP Distance: Price efficiency and mean reversion "
+        "potential\\n\\n"
+
+        "4. RISK FACTOR IDENTIFICATION\\n"
+        "   - Overbought/Oversold extremes (RSI > 80 or < 20)\\n"
+        "   - Volatility spikes or compression\\n"
+        "   - Divergences between price and indicators\\n"
+        "   - News/event risk from economic calendar\\n"
+        "   - Liquidity concerns and gap risk\\n\\n"
+
+        "5. DIRECTIONAL MODEL VALIDATION\\n"
+        "   - Probability assessment (require > 60% for high confidence)\\n"
+        "   - Expected R (Risk/Reward) evaluation\\n"
+        "   - Signal strength and conviction level\\n"
+        "   - Historical accuracy in similar market conditions\\n\\n"
+
+        "6. CONTRADICTION DETECTION (CRITICAL)\\n"
+        "   Examples of VETO-worthy contradictions:\\n"
+        "   - Bullish signal but RSI > 85 (extreme overbought)\\n"
+        "   - Bearish signal but RSI < 15 (extreme oversold)\\n"
+        "   - LTF bullish but HTF in strong downtrend\\n"
+        "   - High volatility regime but tight stop loss\\n"
+        "   - Mean reversion regime but trend-following setup\\n"
+        "   - Low probability (<50%) with high risk\\n\\n"
+
+        "7. SOPHISTICATED DECISION LOGIC\\n"
+        "   TRADE_ALLOWED criteria:\\n"
+        "   ✓ HTF and LTF alignment confirmed\\n"
+        "   ✓ No critical contradictions detected\\n"
+        "   ✓ Probability > 55% (preferably > 65%)\\n"
+        "   ✓ Risk/Reward ratio favorable (Expected R > 1.5)\\n"
+        "   ✓ Regime matches strategy type\\n"
+        "   ✓ No extreme indicator readings against direction\\n\\n"
+
+        "   VETO criteria:\\n"
+        "   ✗ HTF/LTF divergence\\n"
+        "   ✗ Critical contradictions present\\n"
+        "   ✗ Extreme overbought/oversold against signal\\n"
+        "   ✗ High-impact news event imminent\\n"
+        "   ✗ Probability < 50%\\n"
+        "   ✗ Poor risk/reward (Expected R < 1.0)\\n\\n"
+
+        "INPUT DATA (JSON):\\n" +
         market_summary;
 
     if (!feedback_context.empty()) {
@@ -51,15 +113,25 @@ OllamaClient::get_market_analysis(const std::string &ticker,
     }
 
     prompt +=
-        "\n\nOUTPUT FORMAT (JSON ONLY):\n"
-        "{\n"
-        "  \"decision\": \"trade_allowed\" | \"veto\",\n"
-        "  \"confidence\": 0.0-1.0,\n"
-        "  \"reason\": \"Explain why, mentioning HTF alignment and "
-        "indicators\",\n"
-        "  \"htf_confirmation\": \"confirmed\" | \"not_confirmed\",\n"
-        "  \"annotation\": \"Short actionable trade note (e.g. 'Trend intact, "
-        "TP/SL match regime')\"\n"
+        "\\n\\nOUTPUT FORMAT (STRICT JSON ONLY - No markdown, no explanations "
+        "outside JSON):\\n"
+        "{\\n"
+        "  \\\"decision\\\": \\\"trade_allowed\\\" | \\\"veto\\\",\\n"
+        "  \\\"confidence\\\": 0.0-1.0,\\n"
+        "  \\\"reason\\\": \\\"Comprehensive explanation covering: regime "
+        "analysis, HTF/LTF alignment, indicator synthesis, risk factors, and "
+        "final verdict. Be specific and detailed.\\\",\\n"
+        "  \\\"htf_confirmation\\\": \\\"confirmed\\\" | \\\"not_confirmed\\\" "
+        "| \\\"divergent\\\",\\n"
+        "  \\\"annotation\\\": \\\"Concise actionable insight (max 2 "
+        "sentences)\\\",\\n"
+        "  \\\"risk_level\\\": \\\"low\\\" | \\\"medium\\\" | \\\"high\\\",\\n"
+        "  \\\"regime_alignment\\\": \\\"perfect\\\" | \\\"good\\\" | "
+        "\\\"weak\\\" | \\\"contradictory\\\",\\n"
+        "  \\\"key_factors\\\": [\\\"List 3-5 most critical factors "
+        "influencing this decision\\\"],\\n"
+        "  \\\"warnings\\\": [\\\"Any critical warnings or concerns (empty "
+        "array if none)\\\"]\\n"
         "}";
 
     request_body["prompt"] = prompt;
